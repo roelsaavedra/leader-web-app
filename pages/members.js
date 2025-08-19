@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function MembersPage() {
   const { data: session, status } = useSession();
@@ -7,63 +7,78 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'authenticated' && session.user) {
-      fetch('/api/leader-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: session.user.email }),
-      })
-        .then((res) => res.json())
-        .then((leaderData) => {
-          const leaderId = leaderData[0]?.[1];
-          if (!leaderId) throw new Error('Leader ID not found');
-          return fetch(`/api/members?leaderId=${leaderId}`);
-        })
-        .then((res) => res.json())
-        .then((data) => {
-          setMembers(data.rows || []);
-        })
-        .catch((err) => {
-          console.error('Error fetching members:', err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [session, status]);
+    const fetchMembers = async () => {
+      if (!session?.user?.email) return;
 
-  if (loading) return <p>Loading members...</p>;
-  if (!session) return <p>Please sign in to view members.</p>;
+      // Step 1: Get leaderId
+      const leaderRes = await fetch("/api/leader-data", {
+        method: "POST",
+        body: new URLSearchParams({ email: session.user.email }),
+      });
+
+      const leaderData = await leaderRes.json();
+      const leaderId = leaderData?.[0]?.[1];
+
+      if (!leaderId) return setLoading(false);
+
+      // Step 2: Get members
+      const membersRes = await fetch(`/api/members?leaderId=${leaderId}`);
+      const membersJson = await membersRes.json();
+
+      setMembers(membersJson.rows || []);
+      setLoading(false);
+    };
+
+    fetchMembers();
+  }, [session]);
+
+  if (status === "loading" || loading) return <p>Loading...</p>;
+
+  if (!session) {
+    return (
+      <div>
+        <p>You must be signed in to view this page.</p>
+        <button onClick={() => signIn()}>Sign In</button>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>My Members</h2>
+    <div style={{ padding: "20px" }}>
+      <h2>Welcome, {session.user.name || "Leader"} 👋</h2>
+      <h3>Your Members</h3>
+
       {members.length === 0 ? (
         <p>No members found.</p>
       ) : (
-        <table border="1" cellPadding="8">
+        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
               <th>Name</th>
+              <th>Group ID</th>
+              <th>Campus ID</th>
               <th>Year Level</th>
               <th>Status</th>
               <th>Attendance</th>
             </tr>
           </thead>
           <tbody>
-            {members.map((row, i) => (
-              <tr key={i}>
-                <td>{row[2]}</td>
-                <td>{row[5]}</td>
-                <td>{row[6]}</td>
-                <td>{row[7]}</td>
+            {members.map((member) => (
+              <tr key={member[1]}>
+                <td>{member[2]}</td>
+                <td>{member[3]}</td>
+                <td>{member[4]}</td>
+                <td>{member[5]}</td>
+                <td>{member[6]}</td>
+                <td>{member[7]}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
+      <br />
+      <button onClick={() => signOut()}>Sign Out</button>
     </div>
   );
 }
