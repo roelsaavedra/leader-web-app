@@ -1,70 +1,20 @@
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Only GET allowed' });
+  }
 
-export default function MembersPage() {
-  const { data: session, status } = useSession();
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { leaderId } = req.query;
 
-  useEffect(() => {
-    if (status === 'authenticated' && session.user) {
-      fetch('/api/leader-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: session.user.email }),
-      })
-        .then((res) => res.json())
-        .then((leaderData) => {
-          const leaderId = leaderData[0]?.[1]; // Assuming column B is leaderId
-          if (!leaderId) throw new Error('Leader ID not found');
+  if (!leaderId) {
+    return res.status(400).json({ error: 'Missing leaderId' });
+  }
 
-          return fetch(`/api/members?leaderId=${leaderId}`);
-        })
-        .then((res) => res.json())
-        .then((data) => {
-          setMembers(data);
-        })
-        .catch((err) => {
-          console.error('Error fetching members:', err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [session, status]);
-
-  if (loading) return <p>Loading members...</p>;
-  if (!session) return <p>Please sign in to view members.</p>;
-
-  return (
-    <div style={{ padding: '1rem' }}>
-      <h2>My Members</h2>
-      {members.length === 0 ? (
-        <p>No members found.</p>
-      ) : (
-        <table border="1" cellPadding="8">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Year Level</th>
-              <th>Status</th>
-              <th>Attendance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((member) => (
-              <tr key={member.memberID}>
-                <td>{member.Name}</td>
-                <td>{member.yearlevel}</td>
-                <td>{member.status}</td>
-                <td>{member.attendance}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
+  try {
+    const response = await fetch(`https://script.google.com/macros/s/AKfycbwHEFqfhJTT0JeZCihn_PKXZQUmaw4fVBxtMTWknwXKeGOJ9D9yNufxaiConuc0jJFTGQ/exec?action=members&leaderId=${leaderId}`);
+    const data = await response.json();
+    res.status(200).json(data);
+  } catch (err) {
+    console.error('Fetch error:', err);
+    res.status(500).json({ error: 'Failed to fetch from Apps Script' });
+  }
 }
