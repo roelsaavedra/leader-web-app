@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leader Dashboard</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body>
+    <h2>Welcome, Leader</h2>
+
+    <!-- Google Sign-In -->
+    <div
+  id="g_id_onload"
+  data-client_id="990854606300-ni42ar1cs6ngebr0v694ft2ekkl6uvfi.apps.googleusercontent.com"
+  data-callback="handleCredentialResponse"
+></div>
+    <div class="g_id_signin" data-type="standard"></div>
+
+    <hr />
+
+    <!-- Data Output -->
+    <pre id="output">Please sign in to load your data...</pre>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
