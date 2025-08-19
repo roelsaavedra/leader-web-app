@@ -11,7 +11,7 @@ function handleCredentialResponse(response) {
   })
     .then(res => res.json())
     .then(data => {
-      console.log('Response from API:', data); // Debug
+      console.log('Response from API:', data);
       if (data.length === 0) {
         document.getElementById('output').textContent = 'No data found for this email.';
       } else {
@@ -20,14 +20,14 @@ function handleCredentialResponse(response) {
     })
     .catch(err => {
       document.getElementById('output').textContent = 'Error fetching data.';
-      console.error('Frontend fetch error:', err);
+      console.error('Fetch error:', err);
     });
 }
 
 function parseJwt(token) {
   const base64Url = token.split('.')[1];
-  const base64 = decodeURIComponent(atob(base64Url).split('').map(function (c) {
-    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-  }).join(''));
+  const base64 = decodeURIComponent(atob(base64Url).split('')
+    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+    .join(''));
   return JSON.parse(base64);
 }
