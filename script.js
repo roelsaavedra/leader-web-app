@@ -1,5 +1,5 @@
 // TEMPORARY: Hardcoded email for testing
-const email = "youremail@gmail.com"; // Replace this with your actual email
+const email = "roel.saavedra@everynationcampus.org"; // Replace this with your actual email
 
 fetch('https://script.google.com/macros/s/AKfycbwHEFqfhJTT0JeZCihn_PKXZQUmaw4fVBxtMTWknwXKeGOJ9D9yNufxaiConuc0jJFTGQ/exec', {
   method: 'POST',
