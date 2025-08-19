@@ -17,9 +17,8 @@ export default function MembersPage() {
       })
         .then((res) => res.json())
         .then((leaderData) => {
-          const leaderId = leaderData[0]?.[1]; // Assuming leader ID is column B
+          const leaderId = leaderData[0]?.[1];
           if (!leaderId) throw new Error('Leader ID not found');
-
           return fetch(`/api/members?leaderId=${leaderId}`);
         })
         .then((res) => res.json())
@@ -56,10 +55,10 @@ export default function MembersPage() {
           <tbody>
             {members.map((row, i) => (
               <tr key={i}>
-                <td>{row[2]}</td> {/* Name */}
-                <td>{row[5]}</td> {/* Year Level */}
-                <td>{row[6]}</td> {/* Status */}
-                <td>{row[7]}</td> {/* Attendance */}
+                <td>{row[2]}</td>
+                <td>{row[5]}</td>
+                <td>{row[6]}</td>
+                <td>{row[7]}</td>
               </tr>
             ))}
           </tbody>
