@@ -1,23 +1,70 @@
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Only GET allowed' });
-  }
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 
-  const { leaderId } = req.query;
+export default function MembersPage() {
+  const { data: session, status } = useSession();
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!leaderId) {
-    return res.status(400).json({ error: 'Missing leaderId' });
-  }
+  useEffect(() => {
+    if (status === 'authenticated' && session.user) {
+      fetch('/api/leader-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: session.user.email }),
+      })
+        .then((res) => res.json())
+        .then((leaderData) => {
+          const leaderId = leaderData[0]?.[1]; // Assuming column B is leaderId
+          if (!leaderId) throw new Error('Leader ID not found');
 
-  try {
-    const url = `https://script.google.com/macros/s/AKfycbwHEFqfhJTT0JeZCihn_PKXZQUmaw4fVBxtMTWknwXKeGOJ9D9yNufxaiConuc0jJFTGQ/exec?action=members&leaderId=${encodeURIComponent(leaderId)}`;
+          return fetch(`/api/members?leaderId=${leaderId}`);
+        })
+        .then((res) => res.json())
+        .then((data) => {
+          setMembers(data);
+        })
+        .catch((err) => {
+          console.error('Error fetching members:', err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [session, status]);
 
-    const response = await fetch(url);
-    const data = await response.json();
+  if (loading) return <p>Loading members...</p>;
+  if (!session) return <p>Please sign in to view members.</p>;
 
-    res.status(200).json(data);
-  } catch (err) {
-    console.error('Error fetching members:', err);
-    res.status(500).json({ error: 'Failed to fetch members' });
-  }
+  return (
+    <div style={{ padding: '1rem' }}>
+      <h2>My Members</h2>
+      {members.length === 0 ? (
+        <p>No members found.</p>
+      ) : (
+        <table border="1" cellPadding="8">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Year Level</th>
+              <th>Status</th>
+              <th>Attendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {members.map((member) => (
+              <tr key={member.memberID}>
+                <td>{member.Name}</td>
+                <td>{member.yearlevel}</td>
+                <td>{member.status}</td>
+                <td>{member.attendance}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
 }
