@@ -1,9 +1,12 @@
 // TEMPORARY: Hardcoded email for testing
 const email = "roel.saavedra@everynationcampus.org"; // Replace this with your actual email
 
-fetch('https://script.google.com/macros/s/AKfycbwHEFqfhJTT0JeZCihn_PKXZQUmaw4fVBxtMTWknwXKeGOJ9D9yNufxaiConuc0jJFTGQ/exec', {
+fetch('/api/leader-data', {
   method: 'POST',
-  body: new URLSearchParams({ email })
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ email })
 })
   .then(res => res.json())
   .then(data => {
