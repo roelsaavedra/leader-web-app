@@ -10,18 +10,18 @@ export default function MembersPage() {
     const fetchMembers = async () => {
       if (!session?.user?.email) return;
 
-      // Step 1: Get leaderId
+      // Step 1: Get leaderId from backend
       const leaderRes = await fetch("/api/leader-data", {
         method: "POST",
         body: new URLSearchParams({ email: session.user.email }),
       });
 
       const leaderData = await leaderRes.json();
-      const leaderId = leaderData?.[0]?.[1];
+      const leaderId = leaderData?.[0]?.[1]; // assuming col 1 is leaderID
 
       if (!leaderId) return setLoading(false);
 
-      // Step 2: Get members
+      // Step 2: Fetch members using leaderId
       const membersRes = await fetch(`/api/members?leaderId=${leaderId}`);
       const membersJson = await membersRes.json();
 
@@ -63,8 +63,8 @@ export default function MembersPage() {
             </tr>
           </thead>
           <tbody>
-            {members.map((member) => (
-              <tr key={member[1]}>
+            {members.map((member, index) => (
+              <tr key={member[1] || index}>
                 <td>{member[2]}</td>
                 <td>{member[3]}</td>
                 <td>{member[4]}</td>
