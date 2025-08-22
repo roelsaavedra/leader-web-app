@@ -10,10 +10,16 @@ export default function MembersPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      if (!session?.user?.email) return;
+useEffect(() => {
+  const fetchMembers = async () => {
+    if (!session?.user?.email) {
+      setLoading(false);
+      return;
+    }
 
+    try {
+      // Show progress via page
+      console.log("STEP 1: Fetching leader-data...");
       const leaderRes = await fetch("/api/leader-data", {
         method: "POST",
         body: new URLSearchParams({ email: session.user.email }),
@@ -22,17 +28,32 @@ export default function MembersPage() {
       const leaderData = await leaderRes.json();
       const leaderId = leaderData?.[0]?.[1];
 
-      if (!leaderId) return setLoading(false);
+      // Temporary way to display what's going on
+      document.body.innerHTML += `<pre>Leader ID: ${leaderId}</pre>`;
 
+      if (!leaderId) {
+        document.body.innerHTML += `<pre>No leader ID found.</pre>`;
+        setLoading(false);
+        return;
+      }
+
+      // STEP 2: Fetch members
+      document.body.innerHTML += `<pre>Fetching members for ${leaderId}...</pre>`;
       const membersRes = await fetch(`/api/members?leaderId=${leaderId}`);
       const membersJson = await membersRes.json();
 
-      setMembers(membersJson.rows || []);
-      setLoading(false);
-    };
+      document.body.innerHTML += `<pre>Members: ${JSON.stringify(membersJson.rows || [], null, 2)}</pre>`;
 
-    fetchMembers();
-  }, [session]);
+      setMembers(membersJson.rows || []);
+    } catch (err) {
+      document.body.innerHTML += `<pre>ERROR: ${err.message}</pre>`;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchMembers();
+}, [session]);
 
   if (status === "loading" || loading) return <p>Loading...</p>;
 
