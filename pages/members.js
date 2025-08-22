@@ -1,3 +1,5 @@
+// pages/members.js
+
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -10,23 +12,30 @@ export default function MembersPage() {
     const fetchMembers = async () => {
       if (!session?.user?.email) return;
 
-      // Step 1: Get leaderId from backend
-      const leaderRes = await fetch("/api/leader-data", {
-        method: "POST",
-        body: new URLSearchParams({ email: session.user.email }),
-      });
+      try {
+        // Step 1: Get leaderId using the user's email
+        const leaderRes = await fetch("/api/leader-data", {
+          method: "POST",
+          body: new URLSearchParams({ email: session.user.email }),
+        });
+        const leaderData = await leaderRes.json();
+        const leaderId = leaderData?.[0]?.[1]; // Assumes leader ID is in the second column
 
-      const leaderData = await leaderRes.json();
-      const leaderId = leaderData?.[0]?.[1]; // assuming col 1 is leaderID
+        if (!leaderId) {
+          setLoading(false);
+          return;
+        }
 
-      if (!leaderId) return setLoading(false);
+        // Step 2: Fetch members by leaderId
+        const membersRes = await fetch(`/api/members?leaderId=${leaderId}`);
+        const membersJson = await membersRes.json();
 
-      // Step 2: Fetch members using leaderId
-      const membersRes = await fetch(`/api/members?leaderId=${leaderId}`);
-      const membersJson = await membersRes.json();
-
-      setMembers(membersJson.rows || []);
-      setLoading(false);
+        setMembers(membersJson.rows || []);
+      } catch (error) {
+        console.error("Error fetching members:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchMembers();
@@ -36,7 +45,7 @@ export default function MembersPage() {
 
   if (!session) {
     return (
-      <div>
+      <div style={{ padding: "20px" }}>
         <p>You must be signed in to view this page.</p>
         <button onClick={() => signIn()}>Sign In</button>
       </div>
@@ -63,8 +72,8 @@ export default function MembersPage() {
             </tr>
           </thead>
           <tbody>
-            {members.map((member, index) => (
-              <tr key={member[1] || index}>
+            {members.map((member) => (
+              <tr key={member[1]}>
                 <td>{member[2]}</td>
                 <td>{member[3]}</td>
                 <td>{member[4]}</td>
