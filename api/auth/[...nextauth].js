@@ -8,7 +8,8 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
+  // This line is now corrected to match your Vercel variable
+  secret: process.env.NEXTAUTH_SECRET,
 });
 
-// This is the corrected line for the Pages Router
 export default handler;
