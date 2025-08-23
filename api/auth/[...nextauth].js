@@ -10,4 +10,5 @@ const handler = NextAuth({
   ],
 });
 
-export { handler as GET, handler as POST };
+// This is the corrected line for the Pages Router
+export default handler;
