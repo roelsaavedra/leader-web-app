@@ -1,15 +1,22 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-const handler = NextAuth({
+export default NextAuth({
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  // This line is now corrected to match your Vercel variable
   secret: process.env.NEXTAUTH_SECRET,
+  // Add this new callbacks section below the secret
+  callbacks: {
+    async session({ session, token }) {
+      // This ensures that the user's email is always available in the session
+      if (token && session.user) {
+        session.user.email = token.email;
+      }
+      return session;
+    }
+  }
 });
-
-export default handler;
