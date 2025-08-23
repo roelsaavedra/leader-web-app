@@ -4,12 +4,10 @@ import Link from 'next/link';
 export default function MembersPage() {
   const { data: session, status } = useSession();
 
-  // This shows a loading message while the session is being checked
   if (status === 'loading') {
     return <p>Loading...</p>;
   }
 
-  // This protects the page from unauthenticated users
   if (status === 'unauthenticated') {
     return (
       <div>
@@ -19,13 +17,20 @@ export default function MembersPage() {
     );
   }
 
-  // This is what shows if you are successfully logged in
+  // This block is now safer and includes debugging info
   return (
     <div>
-      <h1>Members Page</h1>
-      <p>Welcome, {session.user.email}!</p>
-      <p>If you can see this, the routing is working.</p>
+      {/* The '?.' is called "optional chaining". It prevents crashes. */}
+      <h1>Welcome, {session?.user?.email || 'User'}!</h1>
+      <p>If you can see this, the page is working.</p>
       <Link href="/">Go back to Homepage</Link>
+
+      <hr />
+      <h2>Debugging Information:</h2>
+      <p>This is the content of your session object:</p>
+      <pre style={{ background: '#eee', padding: '1rem', borderRadius: '5px' }}>
+        {JSON.stringify(session, null, 2)}
+      </pre>
     </div>
   );
 }
